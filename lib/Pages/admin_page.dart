@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' show AppBar, BorderRadius, BoxDecoration, BoxShadow, BuildContext, CircleAvatar, Colors, Column, Container, CrossAxisAlignment, EdgeInsets, Expanded, FontWeight, Icon, IconData, Icons, InkWell, Navigator, Padding, Row, Scaffold, SizedBox, StatelessWidget, Text, TextAlign, TextStyle, VoidCallback, Widget;
 
 class AdminPage extends StatelessWidget {
   const AdminPage({super.key});
@@ -59,6 +59,31 @@ class AdminPage extends StatelessWidget {
                 Navigator.pushNamed(context, '/add_user');
               },
             ),
+            const SizedBox(height: 20),
+
+            // Bouton pour consulter les tâches
+            _buildActionCard(
+              context,
+              icon: Icons.task,
+              title: 'Consulter les tâches',
+              description: 'Voir et gérer vos tâches',
+              onTap: () {
+                Navigator.pushNamed(context, '/view_tasks');
+              },
+            ),
+            const SizedBox(height: 20),
+ 
+            // Bouton pour ajouter une tâche
+             _buildActionCard(
+              context,
+              icon: Icons.add_task,
+              title: 'Ajouter une tâche',
+              description: 'Ajouter une nouvelle tâche .',
+              onTap: () {
+                Navigator.pushNamed(context, '/add_task');
+              },
+            ),
+            const SizedBox(height: 20),
           ],
         ),
       ),
