@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class EditUserPage extends StatefulWidget {
-  final DocumentSnapshot user;
+  final   DocumentSnapshot user;
+  final String userId;
 
   // Constructeur pour recevoir les données de l'utilisateur sélectionné
-  const EditUserPage({super.key, required this.user});
+  const EditUserPage({Key? key, required this.user, required this.userId});
 
   @override
   _EditUserPageState createState() => _EditUserPageState();

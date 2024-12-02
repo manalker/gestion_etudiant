@@ -1,8 +1,10 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AddTaskPage extends StatefulWidget {
-  const AddTaskPage({super.key});
+  final String userId;  // userId est passé ici par le parent
+  const AddTaskPage({Key? key, required this.userId}) : super(key: key);
 
   @override
   _AddTaskPageState createState() => _AddTaskPageState();
@@ -11,6 +13,8 @@ class AddTaskPage extends StatefulWidget {
 class _AddTaskPageState extends State<AddTaskPage> {
   final _formKey = GlobalKey<FormState>();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final userId = FirebaseAuth.instance.currentUser?.uid;
 
   String titleTask = '';
   String descTask = '';
@@ -21,6 +25,8 @@ class _AddTaskPageState extends State<AddTaskPage> {
   DateTime? datEchea;
   DateTime? datArchiv;
   String? timeDisplay;
+  String owner='widget.userId';
+ 
 
   // Fonction pour ajouter une tâche à la base de données
   Future<void> addTask() async {
@@ -45,9 +51,10 @@ class _AddTaskPageState extends State<AddTaskPage> {
           );
           return;
         }
-
+print('User ID: ${widget.userId}');
         // Ajout de la tâche dans Firestore
         await _firestore.collection('Tasks').add({
+          'owner': userId, // Utilisation de widget.userId ici
           'titleTask': titleTask,
           'descTask': descTask,
           'cathegTask': cathegTask,
@@ -147,7 +154,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
                   onChanged: (value) => titleTask = value,
                 ),
                 const SizedBox(height: 20),
-
+                
                 // Champ Description
                 TextFormField(
                   decoration: const InputDecoration(
@@ -249,21 +256,11 @@ class _AddTaskPageState extends State<AddTaskPage> {
                 ),
                 const SizedBox(height: 20),
 
-                // Bouton Ajouter
+                // Bouton pour ajouter la tâche
                 Center(
                   child: ElevatedButton(
                     onPressed: addTask,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.teal,
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 15,
-                        horizontal: 50,
-                      ),
-                    ),
-                    child: const Text(
-                      'Ajouter la tâche',
-                      style: TextStyle(fontSize: 16),
-                    ),
+                    child: const Text('Ajouter la tâche'),
                   ),
                 ),
               ],

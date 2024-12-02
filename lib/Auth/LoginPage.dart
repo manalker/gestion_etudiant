@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:student_manager/Pages/etud_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -35,11 +36,14 @@ class _LoginPageState extends State<LoginPage> {
         if (user['statut'] == true) {
           // Redirige vers la page admin si l'utilisateur est un admin
           Navigator.pushReplacementNamed(context, '/admin');
-        } else {
-          // Message d'erreur si l'utilisateur n'est pas autorisé
-          setState(() {
-            message = 'Vous n’êtes pas autorisé à accéder à cette page.';
-          });
+        } else if (user['statut'] == false) {
+          // Passe l'ID utilisateur à la page étudiant
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => EtudPage(userId: result.docs[0].id),
+            ),
+          );
         }
       } else {
         // Message d'erreur si aucun utilisateur correspondant n'est trouvé

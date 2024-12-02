@@ -97,11 +97,13 @@ class _ViewUsersPageState extends State<ViewUsersPage> {
                       IconButton(
                         icon: const Icon(Icons.edit, color: Colors.blue),
                         onPressed: () {
-                          Navigator.push(
+                          Navigator.pushNamed(
                             context,
-                            MaterialPageRoute(
-                              builder: (context) => EditUserPage(user: user),
-                            ),
+                            '/edit_user',
+                            arguments: {
+                              'user':user, // Pass the user DocumentSnapshot
+                              'userId': user.id, // Pass the userId
+                            },
                           );
                         },
                       ),

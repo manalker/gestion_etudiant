@@ -3,8 +3,9 @@ import 'package:flutter/material.dart';
 
 class TaskDetailsPage extends StatelessWidget {
   final Map<String, dynamic> taskData;
+  final String taskId; // Added taskId
 
-  const TaskDetailsPage({super.key, required this.taskData});
+  const TaskDetailsPage({super.key, required this.taskData, required this.taskId});
 
   @override
   Widget build(BuildContext context) {
@@ -38,7 +39,6 @@ class TaskDetailsPage extends StatelessWidget {
     );
   }
 
-  // Helper function to build a row for task details
   Widget _buildDetailRow(String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -57,7 +57,6 @@ class TaskDetailsPage extends StatelessWidget {
     );
   }
 
-  // Helper function to format DateTime or String to readable format
   String _formatDate(dynamic field) {
     if (field is Timestamp) {
       return (field as Timestamp).toDate().toString();
