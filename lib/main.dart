@@ -53,11 +53,12 @@ class MyApp extends StatelessWidget {
         }
 
         if (settings.name == '/task_details') {
-          final args = settings.arguments
-              as Map<String, dynamic>; // Récupérer les arguments passés
+          final args = settings.arguments as Map<String, dynamic>;
           return MaterialPageRoute(
             builder: (context) => TaskDetailsPage(
-                taskData: args['task'], taskId: '',), // Correct argument name here
+              taskData: args['task'],
+              taskId: args['taskId'], // Pass taskId correctly
+            ),
           );
         }
 

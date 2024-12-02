@@ -18,8 +18,6 @@ class _EditTaskPageState extends State<EditTaskPage> {
 
   late TextEditingController _titleController;
   late TextEditingController _categoryController;
-  late TextEditingController _priorityController;
-  late TextEditingController _statusController;
   late TextEditingController _datCreationController;
   late TextEditingController _datEcheaController;
   late TextEditingController _datArchivController;
@@ -28,59 +26,59 @@ class _EditTaskPageState extends State<EditTaskPage> {
   DateTime? datEchea;
   DateTime? datArchiv;
 
+  String? _selectedStatus;
+  String? _selectedPriority;
+
   @override
   void initState() {
     super.initState();
 
-    // Initialize the controllers with the data passed to the widget
-    _titleController = TextEditingController(text: widget.taskData['titleTask'] ?? '');
-    _categoryController = TextEditingController(text: widget.taskData['cathegTask'] ?? '');
-    _priorityController = TextEditingController(text: widget.taskData['priorityTask'] ?? '');
-    _statusController = TextEditingController(text: widget.taskData['statut'] ?? '');
+    _titleController =
+        TextEditingController(text: widget.taskData['titleTask'] ?? '');
+    _categoryController =
+        TextEditingController(text: widget.taskData['cathegTask'] ?? '');
 
-    // Handle both String and Timestamp for date fields
     datCreation = _parseDate(widget.taskData['datCreation']);
     datEchea = _parseDate(widget.taskData['datEchea']);
     datArchiv = _parseDate(widget.taskData['datArchiv']);
 
     _datCreationController = TextEditingController(
-      text: datCreation != null ? DateFormat('yyyy-MM-dd').format(datCreation!) : '',
+      text: datCreation != null
+          ? DateFormat('yyyy-MM-dd').format(datCreation!)
+          : '',
     );
     _datEcheaController = TextEditingController(
       text: datEchea != null ? DateFormat('yyyy-MM-dd').format(datEchea!) : '',
     );
     _datArchivController = TextEditingController(
-      text: datArchiv != null ? DateFormat('yyyy-MM-dd').format(datArchiv!) : '',
+      text:
+          datArchiv != null ? DateFormat('yyyy-MM-dd').format(datArchiv!) : '',
     );
+
+    _selectedStatus = widget.taskData['statut'];
+    _selectedPriority = widget.taskData['priorityTask'];
   }
 
   DateTime? _parseDate(dynamic date) {
     if (date == null) return null;
-
-    // If the date is a String, try to parse it
-    if (date is String) {
-      return DateTime.tryParse(date);
-    } else if (date is Timestamp) {
-      // If the date is already a Timestamp, convert to DateTime
-      return date.toDate();
-    }
+    if (date is String) return DateTime.tryParse(date);
+    if (date is Timestamp) return date.toDate();
     return null;
   }
 
   Future<void> _updateTask() async {
     try {
-      // Ensure we're sending the correct Timestamp type to Firestore
       await _firestore.collection('Tasks').doc(widget.taskId).update({
         'titleTask': _titleController.text,
         'cathegTask': _categoryController.text,
-        'priorityTask': _priorityController.text,
-        'statut': _statusController.text,
-        'datCreation': datCreation != null ? Timestamp.fromDate(datCreation!) : null,
+        'priorityTask': _selectedPriority,
+        'statut': _selectedStatus,
+        'datCreation':
+            datCreation != null ? Timestamp.fromDate(datCreation!) : null,
         'datEchea': datEchea != null ? Timestamp.fromDate(datEchea!) : null,
         'datArchiv': datArchiv != null ? Timestamp.fromDate(datArchiv!) : null,
       });
 
-      // Show success message and pop the page
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Tâche mise à jour avec succès !')),
       );
@@ -92,7 +90,8 @@ class _EditTaskPageState extends State<EditTaskPage> {
     }
   }
 
-  Future<void> _selectDate(BuildContext context, {required String field}) async {
+  Future<void> _selectDate(BuildContext context,
+      {required String field}) async {
     DateTime initialDate;
     if (field == 'datCreation') {
       initialDate = datCreation ?? DateTime.now();
@@ -134,51 +133,109 @@ class _EditTaskPageState extends State<EditTaskPage> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            TextField(
-              controller: _titleController,
-              decoration: const InputDecoration(labelText: 'Titre de la tâche'),
-            ),
-            TextField(
-              controller: _categoryController,
-              decoration: const InputDecoration(labelText: 'Catégorie'),
-            ),
-            TextField(
-              controller: _priorityController,
-              decoration: const InputDecoration(labelText: 'Priorité'),
-            ),
-            TextField(
-              controller: _statusController,
-              decoration: const InputDecoration(labelText: 'Statut'),
-            ),
-            const SizedBox(height: 10),
-            TextField(
-              controller: _datCreationController,
-              decoration: const InputDecoration(labelText: 'Date de création'),
-              onTap: () => _selectDate(context, field: 'datCreation'),
-              readOnly: true,
-            ),
-            TextField(
-              controller: _datEcheaController,
-              decoration: const InputDecoration(labelText: 'Date d\'échéance'),
-              onTap: () => _selectDate(context, field: 'datEchea'),
-              readOnly: true,
-            ),
-            TextField(
-              controller: _datArchivController,
-              decoration: const InputDecoration(labelText: 'Date d\'archivage'),
-              onTap: () => _selectDate(context, field: 'datArchiv'),
-              readOnly: true,
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _updateTask,
-              child: const Text('Mettre à jour'),
-            ),
-          ],
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildTextField('Titre de la tâche', _titleController),
+              const SizedBox(height: 10),
+              _buildTextField('Catégorie', _categoryController),
+              const SizedBox(height: 10),
+              _buildDropdown(
+                'Statut',
+                _selectedStatus,
+                (value) => setState(() => _selectedStatus = value),
+                const [
+                  DropdownMenuItem(value: 'En cours', child: Text('En cours')),
+                  DropdownMenuItem(value: 'Terminé', child: Text('Terminé')),
+                  DropdownMenuItem(
+                      value: 'En retard', child: Text('En retard')),
+                  DropdownMenuItem(
+                      value: 'En attente', child: Text('En attente')),
+                ],
+              ),
+              const SizedBox(height: 10),
+              _buildDropdown(
+                'Priorité',
+                _selectedPriority,
+                (value) => setState(() => _selectedPriority = value),
+                const [
+                  DropdownMenuItem(value: 'faible', child: Text('Faible')),
+                  DropdownMenuItem(value: 'Moyenne', child: Text('Moyenne')),
+                  DropdownMenuItem(value: 'Haute', child: Text('Haute')),
+                ],
+              ),
+              const SizedBox(height: 20),
+              _buildDateField(
+                  'Date de création', _datCreationController, 'datCreation'),
+                  const SizedBox(height: 20),
+              _buildDateField(
+                  'Date d\'échéance', _datEcheaController, 'datEchea'),
+                  const SizedBox(height: 20),
+              _buildDateField(
+                  'Date d\'archivage', _datArchivController, 'datArchiv'),
+
+              
+              const SizedBox(height: 30),
+              Center(
+                child: ElevatedButton(
+                  onPressed: _updateTask,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.teal,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 24, vertical: 12),
+                  ),
+                  child: const Text('Mettre à jour',
+                      style: TextStyle(fontSize: 16)),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
+    );
+  }
+
+  Widget _buildTextField(String label, TextEditingController controller) {
+    return TextField(
+      controller: controller,
+      decoration: InputDecoration(
+        labelText: label,
+        border: const OutlineInputBorder(),
+      ),
+    );
+  }
+
+  Widget _buildDropdown(String label, String? selectedValue,
+      ValueChanged<String?> onChanged, List<DropdownMenuItem<String>> items) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
+        const SizedBox(height: 5),
+        DropdownButtonFormField<String>(
+          value: selectedValue,
+          onChanged: onChanged,
+          items: items,
+          decoration: const InputDecoration(
+            border: OutlineInputBorder(),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDateField(
+      String label, TextEditingController controller, String field) {
+    return TextField(
+      controller: controller,
+      decoration: InputDecoration(
+        labelText: label,
+        border: const OutlineInputBorder(),
+        suffixIcon: const Icon(Icons.calendar_today),
+      ),
+      onTap: () => _selectDate(context, field: field),
+      readOnly: true,
     );
   }
 }

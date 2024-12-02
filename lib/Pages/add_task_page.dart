@@ -25,7 +25,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
   DateTime? datEchea;
   DateTime? datArchiv;
   String? timeDisplay;
-  String owner='widget.userId';
+  String owner='';
  
 
   // Fonction pour ajouter une tâche à la base de données
