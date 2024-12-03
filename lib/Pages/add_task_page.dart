@@ -1,8 +1,10 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AddTaskPage extends StatefulWidget {
-  const AddTaskPage({super.key});
+  final String userId; // userId est passé ici par le parent
+  const AddTaskPage({Key? key, required this.userId}) : super(key: key);
 
   @override
   _AddTaskPageState createState() => _AddTaskPageState();
@@ -11,6 +13,9 @@ class AddTaskPage extends StatefulWidget {
 class _AddTaskPageState extends State<AddTaskPage> {
   final _formKey = GlobalKey<FormState>();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  // ignore: unused_field
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final userId = FirebaseAuth.instance.currentUser?.uid;
 
   String titleTask = '';
   String descTask = '';
@@ -21,6 +26,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
   DateTime? datEchea;
   DateTime? datArchiv;
   String? timeDisplay;
+  String owner = '';
 
   // Fonction pour ajouter une tâche à la base de données
   Future<void> addTask() async {
@@ -34,20 +40,25 @@ class _AddTaskPageState extends State<AddTaskPage> {
         // Vérification des dates (date d'échéance et date d'archivage)
         if (datEchea != null && datEchea!.isBefore(datCreation!)) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("La date d'échéance doit être après la date de création.")),
+            const SnackBar(
+                content: Text(
+                    "La date d'échéance doit être après la date de création.")),
           );
           return;
         }
 
         if (datArchiv != null && datArchiv!.isBefore(datCreation!)) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("La date d'archivage doit être après la date de création.")),
+            const SnackBar(
+                content: Text(
+                    "La date d'archivage doit être après la date de création.")),
           );
           return;
         }
-
+        print('User ID: ${widget.userId}');
         // Ajout de la tâche dans Firestore
         await _firestore.collection('Tasks').add({
+          'owner': userId, // Utilisation de widget.userId ici
           'titleTask': titleTask,
           'descTask': descTask,
           'cathegTask': cathegTask,
@@ -179,10 +190,13 @@ class _AddTaskPageState extends State<AddTaskPage> {
                     border: OutlineInputBorder(),
                   ),
                   items: const [
-                    DropdownMenuItem(value: 'En cours', child: Text('En cours')),
+                    DropdownMenuItem(
+                        value: 'En cours', child: Text('En cours')),
                     DropdownMenuItem(value: 'Terminé', child: Text('Terminé')),
-                    DropdownMenuItem(value: 'En retard', child: Text('En retard')),
-                    DropdownMenuItem(value: 'En attente', child: Text('En attente')),
+                    DropdownMenuItem(
+                        value: 'En retard', child: Text('En retard')),
+                    DropdownMenuItem(
+                        value: 'En attente', child: Text('En attente')),
                   ],
                   onChanged: (value) => setState(() {
                     statut = value!;
@@ -249,21 +263,11 @@ class _AddTaskPageState extends State<AddTaskPage> {
                 ),
                 const SizedBox(height: 20),
 
-                // Bouton Ajouter
+                // Bouton pour ajouter la tâche
                 Center(
                   child: ElevatedButton(
                     onPressed: addTask,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.teal,
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 15,
-                        horizontal: 50,
-                      ),
-                    ),
-                    child: const Text(
-                      'Ajouter la tâche',
-                      style: TextStyle(fontSize: 16),
-                    ),
+                    child: const Text('Ajouter la tâche'),
                   ),
                 ),
               ],

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:student_manager/Pages/user_details_page.dart';
-import 'package:student_manager/Pages/edit_user_page.dart';
 
 class ViewUsersPage extends StatefulWidget {
   const ViewUsersPage({super.key});
@@ -97,11 +96,13 @@ class _ViewUsersPageState extends State<ViewUsersPage> {
                       IconButton(
                         icon: const Icon(Icons.edit, color: Colors.blue),
                         onPressed: () {
-                          Navigator.push(
+                          Navigator.pushNamed(
                             context,
-                            MaterialPageRoute(
-                              builder: (context) => EditUserPage(user: user),
-                            ),
+                            '/edit_user',
+                            arguments: {
+                              'user': user, // Pass the user DocumentSnapshot
+                              'userId': user.id, // Pass the userId
+                            },
                           );
                         },
                       ),

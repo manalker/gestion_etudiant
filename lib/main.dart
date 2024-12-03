@@ -1,3 +1,5 @@
+// ignore_for_file: must_be_immutable
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -6,7 +8,7 @@ import 'package:student_manager/Pages/add_task_page.dart';
 import 'package:student_manager/Pages/add_user_page.dart';
 import 'package:student_manager/Pages/admin_page.dart';
 import 'package:student_manager/Pages/edit_task_page.dart';
-import 'package:student_manager/Pages/student_page.dart';
+import 'package:student_manager/Pages/etud_page.dart';
 import 'package:student_manager/Pages/task_details_page.dart';
 import 'package:student_manager/Pages/edit_user_page.dart';
 import 'package:student_manager/Pages/user_details_page.dart';
@@ -19,11 +21,15 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  runApp(const MyApp());
+  runApp(MyApp(
+    userId: '',
+  ));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  String userId = '';
+
+  MyApp({super.key, required this.userId});
 
   @override
   Widget build(BuildContext context) {
@@ -40,29 +46,40 @@ class MyApp extends StatelessWidget {
           );
         }
         if (settings.name == '/edit_user') {
-          final args = settings.arguments
-              as Map<String, dynamic>; // Retrieve the passed arguments
+          final args = settings.arguments as Map<String, dynamic>;
+          final user = args['user'];
+          final userId = args['userId'];
           return MaterialPageRoute(
-            builder: (context) => EditUserPage(
-                user: args['user']), // Pass the entire args map to the page
+            builder: (context) => EditUserPage(user: user, userId: userId),
           );
         }
 
         if (settings.name == '/task_details') {
-          final args = settings.arguments
-              as Map<String, dynamic>; // Récupérer les arguments passés
+          final args = settings.arguments as Map<String, dynamic>;
           return MaterialPageRoute(
             builder: (context) => TaskDetailsPage(
-                taskData: args['task']), // Correct argument name here
+              taskData: args['task'],
+              taskId: args['taskId'], // Pass taskId correctly
+            ),
           );
         }
 
         if (settings.name == '/edit_task') {
-          final args = settings.arguments
-              as Map<String, dynamic>; // Récupérer les arguments passés
+          final args = settings.arguments as Map<String, dynamic>;
           return MaterialPageRoute(
             builder: (context) => EditTaskPage(
-                taskData: args['task']), // Pass the correct task argument
+              taskData: args[
+                  'task'], // Assurez-vous que 'task' est bien passé dans les arguments
+              taskId: args[
+                  'taskId'], // Assurez-vous que 'taskId' est bien passé dans les arguments
+            ),
+          );
+        }
+
+        if (settings.name == '/add_task') {
+          final args = settings.arguments as Map<String, dynamic>;
+          return MaterialPageRoute(
+            builder: (context) => AddTaskPage(userId: args['userId']),
           );
         }
         return null;
@@ -70,14 +87,14 @@ class MyApp extends StatelessWidget {
       routes: {
         '/': (context) => const LoginPage(),
         '/admin': (context) => const AdminPage(),
+        '/etud': (context) => EtudPage(
+              userId: ModalRoute.of(context)!.settings.arguments as String,
+            ),
         '/add_user': (context) => const AddUserPage(),
         '/view_users': (context) => const ViewUsersPage(),
-        '/view_tasks': (context) => const ViewTasksPage(),
-        '/add_task': (context) => const AddTaskPage(),
-        '/edit_task': (context) => const EditTaskPage(
-              taskData: {},
-            ),
-        '/student': (context) => const StudentPage(),
+        '/view_tasks': (context) => ViewTasksPage(userId: userId),
+        '/add_task': (context) => AddTaskPage(userId: userId),
+        '/edit_task': (context) => const EditTaskPage(taskId: '', taskData: {}),
       },
     );
   }
