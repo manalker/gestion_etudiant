@@ -6,6 +6,7 @@ import 'package:student_manager/Pages/add_task_page.dart';
 import 'package:student_manager/Pages/add_user_page.dart';
 import 'package:student_manager/Pages/admin_page.dart';
 import 'package:student_manager/Pages/edit_task_page.dart';
+import 'package:student_manager/Pages/student_page.dart';
 import 'package:student_manager/Pages/task_details_page.dart';
 import 'package:student_manager/Pages/edit_user_page.dart';
 import 'package:student_manager/Pages/user_details_page.dart';
@@ -73,8 +74,11 @@ class MyApp extends StatelessWidget {
         '/view_users': (context) => const ViewUsersPage(),
         '/view_tasks': (context) => const ViewTasksPage(),
         '/add_task': (context) => const AddTaskPage(),
-        '/edit_task':(context) => const EditTaskPage(taskData: {},),
-              },
+        '/edit_task': (context) => const EditTaskPage(
+              taskData: {},
+            ),
+        '/student': (context) => const StudentPage(),
+      },
     );
   }
 }

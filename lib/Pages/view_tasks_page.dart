@@ -5,6 +5,7 @@ class ViewTasksPage extends StatefulWidget {
   const ViewTasksPage({super.key});
 
   @override
+  // ignore: library_private_types_in_public_api
   _ViewTasksPageState createState() => _ViewTasksPageState();
 }
 
@@ -45,15 +46,20 @@ class _ViewTasksPageState extends State<ViewTasksPage> {
   Icon getStatusIcon(String status) {
     switch (status.toLowerCase()) {
       case 'en cours': // In progress
-        return Icon(Icons.timelapse, color: Colors.blue); // Icon color for "En cours"
+        return const Icon(Icons.timelapse,
+            color: Colors.blue); // Icon color for "En cours"
       case 'terminé': // Completed
-        return Icon(Icons.check_circle, color: Colors.green); // Icon color for "Terminé"
+        return const Icon(Icons.check_circle,
+            color: Colors.green); // Icon color for "Terminé"
       case 'en retard': // Late
-        return Icon(Icons.error, color: Colors.red); // Icon color for "En retard"
+        return const Icon(Icons.error,
+            color: Colors.red); // Icon color for "En retard"
       case 'en attente': // Pending
-        return Icon(Icons.hourglass_empty, color: Colors.orange); // Icon color for "En attente"
+        return const Icon(Icons.hourglass_empty,
+            color: Colors.orange); // Icon color for "En attente"
       default:
-        return Icon(Icons.help, color: Colors.grey); // Default: Unknown status
+        return const Icon(Icons.help,
+            color: Colors.grey); // Default: Unknown status
     }
   }
 
@@ -89,10 +95,13 @@ class _ViewTasksPageState extends State<ViewTasksPage> {
               final taskData = task.data() as Map<String, dynamic>;
 
               // Get priority color for the current task
-              final Color priorityColor = getPriorityColor(taskData['priorityTask'] ?? 'low');
+              // ignore: unused_local_variable
+              final Color priorityColor =
+                  getPriorityColor(taskData['priorityTask'] ?? 'low');
 
               // Get the status icon for the current task
-              final Icon statusIcon = getStatusIcon(taskData['statut'] ?? 'unknown');
+              final Icon statusIcon =
+                  getStatusIcon(taskData['statut'] ?? 'unknown');
 
               return Card(
                 margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
@@ -107,8 +116,10 @@ class _ViewTasksPageState extends State<ViewTasksPage> {
                   subtitle: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Catégorie: ${taskData['cathegTask'] ?? 'No category'}'),
-                      Text('Priorité: ${taskData['priorityTask'] ?? 'No priority'}'),
+                      Text(
+                          'Catégorie: ${taskData['cathegTask'] ?? 'No category'}'),
+                      Text(
+                          'Priorité: ${taskData['priorityTask'] ?? 'No priority'}'),
                     ],
                   ),
                   leading: CircleAvatar(
@@ -123,7 +134,8 @@ class _ViewTasksPageState extends State<ViewTasksPage> {
                         builder: (context) {
                           return AlertDialog(
                             title: const Text('Confirmation'),
-                            content: const Text('Voulez-vous vraiment supprimer cette tâche ?'),
+                            content: const Text(
+                                'Voulez-vous vraiment supprimer cette tâche ?'),
                             actions: [
                               TextButton(
                                 onPressed: () => Navigator.pop(context, false),

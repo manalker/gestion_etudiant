@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:student_manager/Pages/admin_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -21,34 +22,39 @@ class _LoginPageState extends State<LoginPage> {
   // Méthode pour gérer la connexion de l'utilisateur
   Future<void> login() async {
     try {
-      // Requête pour récupérer un utilisateur correspondant à l'email et au mot de passe
+      // Accéder à la collection "User" dans Firestore
       final QuerySnapshot result = await _firestore
-          .collection('User') // Nom de la collection Firestore
-          .where('email', isEqualTo: email) // Filtre par email
-          .where('mdp', isEqualTo: password) // Filtre par mot de passe
+          .collection('User')
+          .where('email', isEqualTo: email)
+          .where('mdp', isEqualTo: password)
           .get();
 
       if (result.docs.isNotEmpty) {
-        // Récupération des données de l'utilisateur
-        final user = result.docs[0].data() as Map<String, dynamic>;
+        // Si un document est trouvé, récupérer les données de l'utilisateur
+        final userData = result.docs[0].data() as Map<String, dynamic>;
 
-        if (user['statut'] == true) {
-          // Redirige vers la page admin si l'utilisateur est un admin
-          Navigator.pushReplacementNamed(context, '/admin');
+        // Vérifier le statut de l'utilisateur
+        if (userData['statut'] == true) {
+          // Rediriger vers la page Admin
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const AdminPage()),
+          );
         } else {
-          // Message d'erreur si l'utilisateur n'est pas autorisé
-          setState(() {
-            message = 'Vous n’êtes pas autorisé à accéder à cette page.';
-          });
+          // Rediriger vers la page Étudiant
+          /*Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const StudentPage()),
+          );*/
         }
       } else {
-        // Message d'erreur si aucun utilisateur correspondant n'est trouvé
+        // Aucun utilisateur correspondant trouvé
         setState(() {
           message = 'Email ou mot de passe incorrect.';
         });
       }
     } catch (e) {
-      // Gestion des erreurs (exemple : problème de connexion à Firestore)
+      // En cas d'erreur, afficher un message
       setState(() {
         message = 'Erreur : ${e.toString()}';
       });
