@@ -14,8 +14,42 @@ class EtudPage extends StatelessWidget {
         title: const Text('Page Étudiant'),
         backgroundColor: Colors.teal,
         centerTitle: true,
+        actions: [
+          PopupMenuButton<String>(
+            onSelected: (value) {
+              if (value == 'tasks') {
+                // Rediriger vers la liste des tâches
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ViewTasksPage(userId: userId),
+                  ),
+                );
+              } else if (value == 'logout') {
+                // Déconnexion
+                Navigator.pushNamedAndRemoveUntil(
+                  context,
+                  '/',
+                  (route) => false,
+                );
+              }
+            },
+            itemBuilder: (BuildContext context) {
+              return [
+                const PopupMenuItem<String>(
+                  value: 'tasks',
+                  child: Text('Liste des tâches'),
+                ),
+                const PopupMenuItem<String>(
+                  value: 'logout',
+                  child: Text('Déconnexion'),
+                ),
+              ];
+            },
+          ),
+        ],
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
@@ -41,35 +75,21 @@ class EtudPage extends StatelessWidget {
             ),
             const SizedBox(height: 40),
 
-            // Bouton pour consulter les taches
+            // Bouton pour ajouter une tâche
             _buildActionCard(
               context,
-              icon: Icons.task_sharp,
-              title: 'Consulter les taches',
-              description: 'Voir et gérer les taches existantes.',
+              icon: Icons.task,
+              title: 'Ajouter une tâche',
+              description: 'Créer une nouvelle tâche.',
               onTap: () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => ViewTasksPage(userId: userId),
+                    builder: (context) => AddTaskPage(userId: userId),
                   ),
                 );
               },
             ),
-            const SizedBox(height: 20),
-
-            // Bouton pour ajouter une tache
-            _buildActionCard(context,
-                icon: Icons.task,
-                title: 'Ajouter une tache',
-                description: 'Créer une nouvelle tache.', onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => AddTaskPage(userId: userId),
-                ),
-              );
-            }),
             const SizedBox(height: 20),
           ],
         ),

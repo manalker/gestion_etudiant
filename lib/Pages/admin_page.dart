@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart' show AppBar, BorderRadius, BoxDecoration, BoxShadow, BuildContext, CircleAvatar, Colors, Column, Container, CrossAxisAlignment, EdgeInsets, Expanded, FontWeight, Icon, IconData, Icons, InkWell, Navigator, Padding, Row, Scaffold, SizedBox, StatelessWidget, Text, TextAlign, TextStyle, VoidCallback, Widget;
+import 'package:flutter/material.dart';
 
 class AdminPage extends StatelessWidget {
   const AdminPage({super.key});
@@ -10,6 +10,39 @@ class AdminPage extends StatelessWidget {
         title: const Text('Espace Admin'),
         backgroundColor: Colors.teal,
         centerTitle: true,
+        actions: [
+          PopupMenuButton<String>(
+            onSelected: (value) {
+              if (value == 'view_users') {
+                Navigator.pushNamed(context, '/view_users');
+              } else if (value == 'view_tasks') {
+                Navigator.pushNamed(context, '/view_tasks');
+              } else if (value == 'logout') {
+                Navigator.pushNamedAndRemoveUntil(
+                  context,
+                  '/',
+                  (route) => false,
+                );
+              }
+            },
+            itemBuilder: (BuildContext context) {
+              return [
+                const PopupMenuItem<String>(
+                  value: 'view_users',
+                  child: Text('Consulter les utilisateurs'),
+                ),
+                const PopupMenuItem<String>(
+                  value: 'view_tasks',
+                  child: Text('Consulter les tâches'),
+                ),
+                const PopupMenuItem<String>(
+                  value: 'logout',
+                  child: Text('Déconnexion'),
+                ),
+              ];
+            },
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -37,18 +70,6 @@ class AdminPage extends StatelessWidget {
             ),
             const SizedBox(height: 40),
 
-            // Bouton pour consulter les utilisateurs
-            _buildActionCard(
-              context,
-              icon: Icons.group,
-              title: 'Consulter les utilisateurs',
-              description: 'Voir et gérer les utilisateurs existants.',
-              onTap: () {
-                Navigator.pushNamed(context, '/view_users');
-              },
-            ),
-            const SizedBox(height: 20),
-
             // Bouton pour ajouter un utilisateur
             _buildActionCard(
               context,
@@ -61,24 +82,12 @@ class AdminPage extends StatelessWidget {
             ),
             const SizedBox(height: 20),
 
-            // Bouton pour consulter les tâches
-            _buildActionCard(
-              context,
-              icon: Icons.task,
-              title: 'Consulter les tâches',
-              description: 'Voir et gérer vos tâches',
-              onTap: () {
-                Navigator.pushNamed(context, '/view_tasks');
-              },
-            ),
-            const SizedBox(height: 20),
- 
             // Bouton pour ajouter une tâche
-             _buildActionCard(
+            _buildActionCard(
               context,
               icon: Icons.add_task,
               title: 'Ajouter une tâche',
-              description: 'Ajouter une nouvelle tâche .',
+              description: 'Ajouter une nouvelle tâche.',
               onTap: () {
                 Navigator.pushNamed(context, '/add_task');
               },
