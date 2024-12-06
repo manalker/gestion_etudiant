@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:student_manager/Pages/add_task_page.dart';
 
 class AdminPage extends StatelessWidget {
-  const AdminPage({super.key});
+  final String userId; // Ajout du paramètre pour l'ID utilisateur
+
+  const AdminPage({Key? key, required this.userId}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -49,7 +52,6 @@ class AdminPage extends StatelessWidget {
         child: Column(
           children: [
             const SizedBox(height: 20),
-            // Titre principal
             const Text(
               'Bienvenue dans l’espace Admin',
               style: TextStyle(
@@ -89,7 +91,13 @@ class AdminPage extends StatelessWidget {
               title: 'Ajouter une tâche',
               description: 'Ajouter une nouvelle tâche.',
               onTap: () {
-                Navigator.pushNamed(context, '/add_task');
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        AddTaskPage(userId: userId), // Passe l'ID utilisateur
+                  ),
+                );
               },
             ),
             const SizedBox(height: 20),
@@ -123,15 +131,12 @@ class AdminPage extends StatelessWidget {
         padding: const EdgeInsets.all(16.0),
         child: Row(
           children: [
-            // Icône principale
             CircleAvatar(
               radius: 30,
               backgroundColor: Colors.teal.withOpacity(0.1),
               child: Icon(icon, color: Colors.teal, size: 30),
             ),
             const SizedBox(width: 20),
-
-            // Texte descriptif
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

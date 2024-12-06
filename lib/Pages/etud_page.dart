@@ -52,7 +52,7 @@ class _EtudPageState extends State<EtudPage> {
                       _focusedDay = focusedDay;
                     });
                   },
-                  calendarStyle: CalendarStyle(
+                  calendarStyle: const CalendarStyle(
                     selectedDecoration: BoxDecoration(
                       color: Colors.teal,
                       shape: BoxShape.circle,
@@ -61,7 +61,7 @@ class _EtudPageState extends State<EtudPage> {
                       color: Colors.blue,
                       shape: BoxShape.circle,
                     ),
-                    weekendTextStyle: const TextStyle(color: Colors.red),
+                    weekendTextStyle: TextStyle(color: Colors.red),
                   ),
                   headerStyle: const HeaderStyle(
                     titleCentered: true,
@@ -76,12 +76,12 @@ class _EtudPageState extends State<EtudPage> {
           ),
         );
       case 0: // Onglet "Tâche"
-        return Padding(
-          padding: const EdgeInsets.all(16.0),
+        return const Padding(
+          padding: EdgeInsets.all(16.0),
           child: Column(
             children: [
-              const SizedBox(height: 20),
-              const Text(
+              SizedBox(height: 20),
+              Text(
                 'Bienvenue dans l’espace Étudiant : ',
                 style: TextStyle(
                   fontSize: 24,
@@ -90,8 +90,8 @@ class _EtudPageState extends State<EtudPage> {
                 ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 10),
-              const Text(
+              SizedBox(height: 10),
+              Text(
                 'Choisissez une action à effectuer.',
                 style: TextStyle(
                   fontSize: 16,
@@ -99,24 +99,8 @@ class _EtudPageState extends State<EtudPage> {
                 ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 40),
-
-              // Bouton pour ajouter une tâche
-              _buildActionCard(
-                context,
-                icon: Icons.task,
-                title: 'Ajouter une tâche',
-                description: 'Créer une nouvelle tâche.',
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => AddTaskPage(userId: widget.userId),
-                    ),
-                  );
-                },
-              ),
-              const SizedBox(height: 20),
+              SizedBox(height: 40),
+              SizedBox(height: 20),
             ],
           ),
         );
@@ -144,7 +128,8 @@ class _EtudPageState extends State<EtudPage> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => ViewTasksPage(userId: widget.userId),
+                    builder: (context) => ViewTasksPage(
+                        userId: widget.userId), // Utilisation correcte
                   ),
                 );
               } else if (value == 'logout') {
@@ -159,6 +144,14 @@ class _EtudPageState extends State<EtudPage> {
                   child: Text('Liste des tâches'),
                 ),
                 const PopupMenuItem<String>(
+                  value: 'Historique',
+                  child: Text('Historique'),
+                ),
+                const PopupMenuItem<String>(
+                  value: 'Note',
+                  child: Text('Ajouter une note'),
+                ),
+                const PopupMenuItem<String>(
                   value: 'logout',
                   child: Text('Déconnexion'),
                 ),
@@ -168,15 +161,19 @@ class _EtudPageState extends State<EtudPage> {
         ],
       ),
       body: _getBody(),
-      floatingActionButton: _selectedIndex == 1
-          ? FloatingActionButton(
-              onPressed: () {
-                // Action pour ajouter une tâche à partir de l'agenda
-              },
-              backgroundColor: Colors.blue,
-              child: const Icon(Icons.add, color: Colors.white),
-            )
-          : null,
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) =>
+                  AddTaskPage(userId: widget.userId), // Utilisation correcte
+            ),
+          );
+        },
+        backgroundColor: Colors.teal,
+        child: const Icon(Icons.add),
+      ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       bottomNavigationBar: BottomNavigationBar(
         items: const [
@@ -196,66 +193,6 @@ class _EtudPageState extends State<EtudPage> {
         currentIndex: _selectedIndex,
         selectedItemColor: Colors.teal,
         onTap: _onItemTapped,
-      ),
-    );
-  }
-
-  // Widget personnalisé pour les actions
-  Widget _buildActionCard(BuildContext context,
-      {required IconData icon,
-      required String title,
-      required String description,
-      required VoidCallback onTap}) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(10),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(10),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.2),
-              blurRadius: 10,
-              spreadRadius: 5,
-            ),
-          ],
-        ),
-        padding: const EdgeInsets.all(16.0),
-        child: Row(
-          children: [
-            CircleAvatar(
-              radius: 30,
-              backgroundColor: Colors.teal.withOpacity(0.1),
-              child: Icon(icon, color: Colors.teal, size: 30),
-            ),
-            const SizedBox(width: 20),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
-                    ),
-                  ),
-                  const SizedBox(height: 5),
-                  Text(
-                    description,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const Icon(Icons.arrow_forward_ios, color: Colors.grey, size: 20),
-          ],
-        ),
       ),
     );
   }

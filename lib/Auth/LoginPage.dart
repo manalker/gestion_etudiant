@@ -31,13 +31,17 @@ class _LoginPageState extends State<LoginPage> {
         if (userData['statut'] == true) {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) => const AdminPage()),
+            MaterialPageRoute(
+              builder: (context) =>
+                  AdminPage(userId: result.docs[0].id), // Passez l'ID
+            ),
           );
         } else {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (context) => EtudPage(userId: result.docs[0].id),
+              builder: (context) =>
+                  EtudPage(userId: result.docs[0].id), // ID utilisateur
             ),
           );
         }

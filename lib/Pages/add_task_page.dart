@@ -1,4 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -13,58 +12,49 @@ class AddTaskPage extends StatefulWidget {
 class _AddTaskPageState extends State<AddTaskPage> {
   final _formKey = GlobalKey<FormState>();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  // ignore: unused_field
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final userId = FirebaseAuth.instance.currentUser?.uid;
 
   String titleTask = '';
   String descTask = '';
   String cathegTask = '';
-  String statut = 'En cours'; // Valeur par défaut pour le menu déroulant
-  String priorityTask = 'Moyenne'; // Priorité par défaut
-  DateTime? datCreation;
+  String statut = 'En cours';
+  String priorityTask = 'Moyenne';
   DateTime? datEchea;
   DateTime? datArchiv;
-  String? timeDisplay;
-  String owner = '';
 
   // Fonction pour ajouter une tâche à la base de données
   Future<void> addTask() async {
     if (_formKey.currentState!.validate()) {
       try {
-        // Si la date de création n'est pas déjà définie, on l'initialise avec la date actuelle
-        if (datCreation == null) {
-          datCreation = DateTime.now();
-        }
-
-        // Vérification des dates (date d'échéance et date d'archivage)
-        if (datEchea != null && datEchea!.isBefore(datCreation!)) {
+        // Validation des dates
+        if (datEchea != null && datEchea!.isBefore(DateTime.now())) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-                content: Text(
-                    "La date d'échéance doit être après la date de création.")),
+              content: Text("La date d'échéance doit être future."),
+            ),
           );
           return;
         }
 
-        if (datArchiv != null && datArchiv!.isBefore(datCreation!)) {
+        if (datArchiv != null && datArchiv!.isBefore(DateTime.now())) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-                content: Text(
-                    "La date d'archivage doit être après la date de création.")),
+              content: Text("La date d'archivage doit être future."),
+            ),
           );
           return;
         }
-        print('User ID: ${widget.userId}');
-        // Ajout de la tâche dans Firestore
+
+        // Ajout de la tâche avec la date de création actuelle
         await _firestore.collection('Tasks').add({
-          'owner': userId, // Utilisation de widget.userId ici
+          'owner': widget
+              .userId, // Utilisation correcte de l'ID de l'utilisateur connecté
           'titleTask': titleTask,
           'descTask': descTask,
           'cathegTask': cathegTask,
           'statut': statut,
           'priorityTask': priorityTask,
-          'datCreation': datCreation?.toIso8601String(),
+          'datCreation':
+              DateTime.now().toIso8601String(), // Date et heure actuelles
           'datEchea': datEchea?.toIso8601String(),
           'datArchiv': datArchiv?.toIso8601String(),
         });
@@ -73,49 +63,18 @@ class _AddTaskPageState extends State<AddTaskPage> {
           const SnackBar(content: Text('Tâche ajoutée avec succès !')),
         );
 
+        // Réinitialisation du formulaire
         _formKey.currentState!.reset();
         setState(() {
           statut = 'En cours';
           priorityTask = 'Moyenne';
-          datCreation = null;
           datEchea = null;
           datArchiv = null;
-          timeDisplay = null;
         });
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Erreur : ${e.toString()}')),
         );
-      }
-    }
-  }
-
-  // Fonction pour sélectionner la date et l'heure de création
-  Future<void> _selectDateTime(BuildContext context) async {
-    final DateTime? pickedDate = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
-    );
-
-    if (pickedDate != null) {
-      final TimeOfDay? pickedTime = await showTimePicker(
-        context: context,
-        initialTime: TimeOfDay.fromDateTime(pickedDate),
-      );
-
-      if (pickedTime != null) {
-        setState(() {
-          datCreation = DateTime(
-            pickedDate.year,
-            pickedDate.month,
-            pickedDate.day,
-            pickedTime.hour,
-            pickedTime.minute,
-          );
-          timeDisplay = '${pickedTime.format(context)} ${pickedDate.toLocal()}';
-        });
       }
     }
   }
@@ -212,22 +171,13 @@ class _AddTaskPageState extends State<AddTaskPage> {
                     border: OutlineInputBorder(),
                   ),
                   items: const [
-                    DropdownMenuItem(value: 'faible', child: Text('faible')),
+                    DropdownMenuItem(value: 'Faible', child: Text('Faible')),
                     DropdownMenuItem(value: 'Moyenne', child: Text('Moyenne')),
                     DropdownMenuItem(value: 'Haute', child: Text('Haute')),
                   ],
                   onChanged: (value) => setState(() {
                     priorityTask = value!;
                   }),
-                ),
-                const SizedBox(height: 20),
-
-                // Sélecteur pour la date et l'heure de création
-                ElevatedButton(
-                  onPressed: () => _selectDateTime(context),
-                  child: Text(datCreation == null
-                      ? 'Sélectionnez la date et l\'heure'
-                      : 'Date et Heure de création : $timeDisplay'),
                 ),
                 const SizedBox(height: 20),
 

@@ -82,11 +82,14 @@ class MyApp extends StatelessWidget {
             builder: (context) => AddTaskPage(userId: args['userId']),
           );
         }
+
         return null;
       },
       routes: {
         '/': (context) => const LoginPage(),
-        '/admin': (context) => const AdminPage(),
+        '/admin': (context) => AdminPage(
+              userId: ModalRoute.of(context)!.settings.arguments as String,
+            ),
         '/etud': (context) => EtudPage(
               userId: ModalRoute.of(context)!.settings.arguments as String,
             ),
