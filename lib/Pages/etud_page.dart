@@ -4,6 +4,8 @@ import 'package:student_manager/Pages/HistoryPage.dart';
 import 'package:student_manager/Pages/add_task_page.dart';
 import 'package:student_manager/Pages/view_tasks_page.dart';
 import 'package:table_calendar/table_calendar.dart';
+import 'package:student_manager/Pages/add_note_page.dart';
+import 'package:student_manager/Pages/view_notes_page.dart';
 
 class EtudPage extends StatefulWidget {
   final String userId; // Identifiant unique de l'utilisateur connecté
@@ -341,7 +343,23 @@ class _EtudPageState extends State<EtudPage> {
                     ),
                   ),
                 );
-              } else if (value == 'logout') {
+              }  else if (value == 'Note') {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => AddNotePage(
+                        userId: widget.userId), 
+                  ),
+                );
+              }else if (value == 'Notes') {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ViewNotesPage(
+                        userId: widget.userId), 
+                  ),
+                );
+              }else if (value == 'logout') {
                 Navigator.pushNamedAndRemoveUntil(
                     context, '/', (route) => false);
               }
@@ -359,6 +377,10 @@ class _EtudPageState extends State<EtudPage> {
                 const PopupMenuItem<String>(
                   value: 'Note',
                   child: Text('Ajouter une note'),
+                ),
+                const PopupMenuItem<String>(
+                  value: 'Notes',
+                  child: Text('Liste des notes'),
                 ),
                 const PopupMenuItem<String>(
                   value: 'logout',
