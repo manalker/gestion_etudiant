@@ -5,7 +5,8 @@ class TaskDetailsPage extends StatelessWidget {
   final Map<String, dynamic> taskData;
   final String taskId;
 
-  const TaskDetailsPage({super.key, required this.taskData, required this.taskId});
+  const TaskDetailsPage(
+      {super.key, required this.taskData, required this.taskId});
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +32,8 @@ class TaskDetailsPage extends StatelessWidget {
                     children: [
                       Text(
                         taskData['titleTask'] ?? 'Titre non défini',
-                        style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                            fontSize: 24, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 8),
                       _buildStatusIcon(taskData['statut']),
@@ -49,12 +51,36 @@ class TaskDetailsPage extends StatelessWidget {
 
   List<Widget> _buildDetailCards(BuildContext context) {
     final List<Map<String, dynamic>> details = [
-      {'label': 'Description', 'value': taskData['descTask'], 'icon': Icons.description},
-      {'label': 'Catégorie', 'value': taskData['cathegTask'], 'icon': Icons.category},
-      {'label': 'Priorité', 'value': taskData['priorityTask'], 'icon': Icons.flag},
-      {'label': 'Créé le', 'value': _formatDate(taskData['datCreation']), 'icon': Icons.calendar_today},
-      {'label': 'Date d\'échéance', 'value': _formatDate(taskData['datEchea']), 'icon': Icons.event},
-      {'label': 'Date d\'archivage', 'value': _formatDate(taskData['datArchiv']), 'icon': Icons.archive},
+      {
+        'label': 'Description',
+        'value': taskData['descTask'],
+        'icon': Icons.description
+      },
+      {
+        'label': 'Catégorie',
+        'value': taskData['cathegTask'],
+        'icon': Icons.category
+      },
+      {
+        'label': 'Priorité',
+        'value': taskData['priorityTask'],
+        'icon': Icons.flag
+      },
+      {
+        'label': 'Créé le',
+        'value': _formatDate(taskData['datCreation']),
+        'icon': Icons.calendar_today
+      },
+      {
+        'label': 'Date d\'échéance',
+        'value': _formatDate(taskData['datEchea']),
+        'icon': Icons.event
+      },
+      {
+        'label': 'Date d\'archivage',
+        'value': _formatDate(taskData['datArchiv']),
+        'icon': Icons.archive
+      },
     ];
 
     return details.map((detail) {
@@ -135,7 +161,8 @@ class TaskDetailsPage extends StatelessWidget {
         const SizedBox(width: 8),
         Text(
           status ?? 'Statut non défini',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: color),
+          style: TextStyle(
+              fontSize: 16, fontWeight: FontWeight.bold, color: color),
         ),
       ],
     );

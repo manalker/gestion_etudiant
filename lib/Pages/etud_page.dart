@@ -1,66 +1,89 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:student_manager/Pages/AgendaPage.dart';
 import 'package:student_manager/Pages/HistoryPage.dart';
+import 'package:student_manager/Pages/SearchPage.dart';
 import 'package:student_manager/Pages/add_task_page.dart';
 import 'package:student_manager/Pages/view_tasks_page.dart';
-import 'package:table_calendar/table_calendar.dart';
 import 'package:student_manager/Pages/add_note_page.dart';
 import 'package:student_manager/Pages/view_notes_page.dart';
 
 class EtudPage extends StatefulWidget {
   final String userId; // Identifiant unique de l'utilisateur connecté
 
-  const EtudPage({Key? key, required this.userId}) : super(key: key);
+  const EtudPage({super.key, required this.userId});
 
   @override
+  // ignore: library_private_types_in_public_api
   _EtudPageState createState() => _EtudPageState();
 }
 
 class _EtudPageState extends State<EtudPage> {
   int _selectedIndex = 0; // Index de l'onglet sélectionné
-  DateTime _focusedDay =
-      DateTime.now(); // Jour actuellement focalisé dans le calendrier
-  DateTime? _selectedDay; // Jour sélectionné par l'utilisateur
+// Tâches par date
 
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // Gérer le changement d'onglet dans la barre de navigation inférieure
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
+  @override
+  void initState() {
+    super.initState();
+    _loadTasks();
   }
 
-  // Vérifier si une tâche est en retard
-  bool isTaskLate(Map<String, dynamic> taskData) {
-    if (taskData['datEchea'] != null && taskData['statut'] != 'Terminé') {
-      final dueDate = _convertToDateTime(taskData['datEchea']);
-      return dueDate.isBefore(DateTime.now());
+  // Charger les tâches depuis Firestore
+  Future<void> _loadTasks() async {
+    final querySnapshot = await _firestore
+        .collection('Tasks')
+        .where('owner', isEqualTo: widget.userId)
+        .get();
+
+    final tasks = <DateTime, List<Map<String, dynamic>>>{};
+    for (var doc in querySnapshot.docs) {
+      final data = doc.data();
+      if (data['datEchea'] != null) {
+        final date = _convertToDateTime(data['datEchea']);
+        final task = {
+          'id': doc.id,
+          'title': data['titleTask'] ?? 'Sans titre',
+          'time': data['heureTask'] ?? '',
+          'status': data['statut'] ?? 'En attente',
+          'priority': data['priorityTask'] ?? 'unknown'
+        };
+        if (tasks[date] == null) {
+          tasks[date] = [task];
+        } else {
+          tasks[date]!.add(task);
+        }
+      }
     }
-    return false;
+
+    setState(() {});
   }
 
-  // Vérifier si une tâche est due dans la semaine actuelle
-  bool isDueThisWeek(DateTime dueDate) {
-    final now = DateTime.now();
-    final startOfWeek =
-        now.subtract(Duration(days: now.weekday - 1)); // Début de la semaine
-    final endOfWeek =
-        startOfWeek.add(const Duration(days: 6)); // Fin de la semaine
-    return dueDate.isAfter(startOfWeek) && dueDate.isBefore(endOfWeek);
-  }
-
-  // Récupérer une icône correspondant à la priorité de la tâche
-  Icon getPriorityIcon(String priority) {
-    switch (priority.toLowerCase()) {
-      case 'haute':
-        return const Icon(Icons.priority_high, color: Colors.red);
-      case 'moyenne':
-        return const Icon(Icons.report, color: Colors.orange);
-      case 'faible':
-        return const Icon(Icons.low_priority, color: Colors.green);
-      default:
-        return const Icon(Icons.help_outline, color: Colors.grey);
+  void _onItemTapped(int index) {
+    if (index == 1) {
+      // Naviguer vers la page "Agenda"
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => AgendaPage(
+            userId: widget.userId,
+            events: const {}, // Vous pouvez passer des événements réels ici
+          ),
+        ),
+      );
+    } else if (index == 2) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => SearchPage(userId: widget.userId),
+        ),
+      );
+    } else {
+      // Met à jour l'index sélectionné pour les autres onglets
+      setState(() {
+        _selectedIndex = index;
+      });
     }
   }
 
@@ -70,9 +93,7 @@ class _EtudPageState extends State<EtudPage> {
       stream: _firestore
           .collection('Tasks')
           .where('owner', isEqualTo: widget.userId)
-          .where('statut',
-              whereIn: ['En cours', 'En attente']) // Tâches actives uniquement
-          .snapshots(),
+          .where('statut', whereIn: ['En cours', 'En attente']).snapshots(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
@@ -121,22 +142,14 @@ class _EtudPageState extends State<EtudPage> {
             final month = entry.key;
             final taskList = entry.value;
 
-            final DateTime monthDate = DateTime(
-              int.parse(month.split('-')[0]),
-              int.parse(month.split('-')[1]),
-            );
-            final String formattedMonth =
-                '${_getMonthName(monthDate.month)} ${monthDate.year}';
-
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // En-tête du mois
                 Padding(
                   padding: const EdgeInsets.symmetric(
                       vertical: 10.0, horizontal: 16.0),
                   child: Text(
-                    formattedMonth,
+                    month,
                     style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -144,7 +157,6 @@ class _EtudPageState extends State<EtudPage> {
                     ),
                   ),
                 ),
-                // Liste des tâches pour le mois courant
                 ...taskList.map((task) {
                   final taskData = task.data() as Map<String, dynamic>;
                   final title = taskData['titleTask'] ?? 'Sans titre';
@@ -217,66 +229,36 @@ class _EtudPageState extends State<EtudPage> {
     );
   }
 
-  // Construire l'agenda avec TableCalendar
-  Widget _buildAgenda() {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        children: [
-          const Text(
-            'Mon Agenda',
-            style: TextStyle(
-              fontSize: 24.0,
-              fontWeight: FontWeight.bold,
-              color: Colors.teal,
-            ),
-          ),
-          const SizedBox(height: 16.0),
-          Expanded(
-            child: TableCalendar(
-              firstDay: DateTime.utc(2020, 1, 1),
-              lastDay: DateTime.utc(2030, 12, 31),
-              focusedDay: _focusedDay,
-              selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-              onDaySelected: (selectedDay, focusedDay) {
-                setState(() {
-                  _selectedDay = selectedDay;
-                  _focusedDay = focusedDay;
-                });
-              },
-              calendarStyle: const CalendarStyle(
-                selectedDecoration: BoxDecoration(
-                  color: Colors.teal,
-                  shape: BoxShape.circle,
-                ),
-                todayDecoration: BoxDecoration(
-                  color: Colors.blue,
-                  shape: BoxShape.circle,
-                ),
-                weekendTextStyle: TextStyle(color: Colors.red),
-              ),
-              headerStyle: const HeaderStyle(
-                titleCentered: true,
-                formatButtonVisible: false,
-              ),
-              daysOfWeekStyle: const DaysOfWeekStyle(
-                weekendStyle: TextStyle(color: Colors.red),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
+  // Vérifier si une tâche est en retard
+  bool isTaskLate(Map<String, dynamic> taskData) {
+    if (taskData['datEchea'] != null && taskData['statut'] != 'Terminé') {
+      final dueDate = _convertToDateTime(taskData['datEchea']);
+      return dueDate.isBefore(DateTime.now());
+    }
+    return false;
   }
 
-  // Gestion du corps de la page selon l'onglet actif
-  Widget _getBody() {
-    switch (_selectedIndex) {
-      case 1:
-        return _buildAgenda();
-      case 0:
+  // Vérifier si une tâche est due dans la semaine actuelle
+  bool isDueThisWeek(DateTime dueDate) {
+    final now = DateTime.now();
+    final startOfWeek =
+        now.subtract(Duration(days: now.weekday - 1)); // Début de la semaine
+    final endOfWeek =
+        startOfWeek.add(const Duration(days: 6)); // Fin de la semaine
+    return dueDate.isAfter(startOfWeek) && dueDate.isBefore(endOfWeek);
+  }
+
+  // Récupérer une icône correspondant à la priorité de la tâche
+  Icon getPriorityIcon(String priority) {
+    switch (priority.toLowerCase()) {
+      case 'haute':
+        return const Icon(Icons.priority_high, color: Colors.red);
+      case 'moyenne':
+        return const Icon(Icons.report, color: Colors.orange);
+      case 'faible':
+        return const Icon(Icons.low_priority, color: Colors.green);
       default:
-        return _buildTasksByMonth();
+        return const Icon(Icons.help_outline, color: Colors.grey);
     }
   }
 
@@ -287,27 +269,8 @@ class _EtudPageState extends State<EtudPage> {
     } else if (date is String) {
       return DateTime.parse(date);
     } else {
-      return DateTime(2100);
+      throw Exception("Format de date invalide");
     }
-  }
-
-  // Récupérer le nom d'un mois
-  String _getMonthName(int month) {
-    const months = [
-      'Janvier',
-      'Février',
-      'Mars',
-      'Avril',
-      'Mai',
-      'Juin',
-      'Juillet',
-      'Août',
-      'Septembre',
-      'Octobre',
-      'Novembre',
-      'Décembre'
-    ];
-    return months[month - 1];
   }
 
   // Formater une date en chaîne lisible
@@ -343,23 +306,21 @@ class _EtudPageState extends State<EtudPage> {
                     ),
                   ),
                 );
-              }  else if (value == 'Note') {
+              } else if (value == 'Note') {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => AddNotePage(
-                        userId: widget.userId), 
+                    builder: (context) => AddNotePage(userId: widget.userId),
                   ),
                 );
-              }else if (value == 'Notes') {
+              } else if (value == 'Notes') {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => ViewNotesPage(
-                        userId: widget.userId), 
+                    builder: (context) => ViewNotesPage(userId: widget.userId),
                   ),
                 );
-              }else if (value == 'logout') {
+              } else if (value == 'logout') {
                 Navigator.pushNamedAndRemoveUntil(
                     context, '/', (route) => false);
               }
@@ -391,7 +352,7 @@ class _EtudPageState extends State<EtudPage> {
           ),
         ],
       ),
-      body: _getBody(),
+      body: _buildTasksByMonth(),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.push(
@@ -404,7 +365,6 @@ class _EtudPageState extends State<EtudPage> {
         backgroundColor: Colors.teal,
         child: const Icon(Icons.add),
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       bottomNavigationBar: BottomNavigationBar(
         items: const [
           BottomNavigationBarItem(
@@ -422,7 +382,7 @@ class _EtudPageState extends State<EtudPage> {
         ],
         currentIndex: _selectedIndex,
         selectedItemColor: Colors.teal,
-        onTap: _onItemTapped,
+        onTap: _onItemTapped, // Appelle la méthode _onItemTapped
       ),
     );
   }
