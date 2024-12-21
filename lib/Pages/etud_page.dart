@@ -4,6 +4,7 @@ import 'package:student_manager/Pages/AgendaPage.dart';
 import 'package:student_manager/Pages/HistoryPage.dart';
 import 'package:student_manager/Pages/SearchPage.dart';
 import 'package:student_manager/Pages/add_task_page.dart';
+import 'package:student_manager/Pages/task_details_page.dart';
 import 'package:student_manager/Pages/view_tasks_page.dart';
 import 'package:student_manager/Pages/add_note_page.dart';
 import 'package:student_manager/Pages/view_notes_page.dart';
@@ -21,13 +22,170 @@ class EtudPage extends StatefulWidget {
 class _EtudPageState extends State<EtudPage> {
   int _selectedIndex = 0; // Index de l'onglet sélectionné
 // Tâches par date
-
+  int _unreadCount = 0;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   @override
   void initState() {
     super.initState();
     _loadTasks();
+  }
+
+  // Stream pour récupérer les notifications non lues
+  Stream<List<Map<String, dynamic>>> getUnreadNotifications(String userId) {
+    final notifsCollection = FirebaseFirestore.instance.collection('Notifs');
+    return notifsCollection
+        .where('owner', isEqualTo: userId)
+        .where('is_read', isEqualTo: false)
+        .snapshots()
+        .map((snapshot) {
+      // Log pour voir ce qui est récupéré
+      print("Notifications récupérées: ${snapshot.docs.length}");
+      return snapshot.docs.map((doc) {
+        print("Notification: ${doc.data()}");
+        return {
+          'id_tache': doc['id_tache'],
+          'date_notif': (doc['date_notif'] as Timestamp).toDate(),
+        };
+      }).toList();
+    });
+  }
+
+// Fonction pour récupérer le titre d'une tâche en fonction de son ID
+  Future<String> getTitleTask(String idTache) async {
+    try {
+      // Référence à la collection "Tasks" dans Firestore
+      final taskDoc = await FirebaseFirestore.instance
+          .collection('Tasks')
+          .doc(idTache)
+          .get();
+
+      // Vérifiez si le document existe
+      if (taskDoc.exists) {
+        final data = taskDoc.data();
+        return data?['titleTask'] ??
+            'Unknown Task'; // Retourne le titre ou "Unknown Task" si non défini
+      } else {
+        return 'Unknown Task'; // Document introuvable
+      }
+    } catch (e) {
+      print('Erreur lors de la récupération du titre de la tâche : $e');
+      return 'Unknown Task'; // En cas d'erreur
+    }
+  }
+
+  List<Map<String, dynamic>> notifications =
+      []; // Assume this is your state variable
+// Mark notification as read and update the notifications list
+  void _markNotificationAsRead(String taskId) {
+    _firestore
+        .collection('Notifs')
+        .doc(taskId)
+        .update({'is_read': true}).then((_) {
+      setState(() {
+        _unreadCount--; // Decrease unread notification count
+        // Manually update the notification list to remove the read notification
+        notifications
+            .removeWhere((notification) => notification['id_tache'] == taskId);
+      });
+    });
+  }
+  // Afficher les notifications dans une boîte de dialogue
+  void _showNotifications(
+      BuildContext context, List<Map<String, dynamic>> notifications) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Notifications"),
+          content: notifications.isEmpty
+              ? const Text("Aucune notification non lue.")
+              : SizedBox(
+                  width: double.maxFinite,
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: notifications.length,
+                    itemBuilder: (context, index) {
+                      final notification = notifications[index];
+                      final date = notification['date_notif'];
+                      final taskId = notification['id_tache'];
+                      return FutureBuilder<String>(
+                        future: getTitleTask(
+                            taskId), // Fetch task title using taskId
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return ListTile(
+                              title: const Text('Chargement du titre...'),
+                              subtitle: Text('Reçue le ${_formatDate(date)}'),
+                            );
+                          } else if (snapshot.hasError) {
+                            return ListTile(
+                              title:
+                                  const Text('Erreur de récupération du titre'),
+                              subtitle: Text('Reçue le ${_formatDate(date)}'),
+                            );
+                          } else if (snapshot.hasData) {
+                            return ListTile(
+                              title: Text(snapshot.data ?? 'Titre inconnu'),
+                              subtitle: Text('Reçue le ${_formatDate(date)}'),
+                              onTap: () {
+                                // Mark the notification as read
+                                _markNotificationAsRead(taskId);
+
+                                // Fetch task data and navigate to TaskDetailsPage
+                                FirebaseFirestore.instance
+                                    .collection('Tasks')
+                                    .doc(taskId)
+                                    .get()
+                                    .then((taskDoc) {
+                                  if (taskDoc.exists) {
+                                    var taskData = taskDoc.data() ?? {};
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => TaskDetailsPage(
+                                          taskData:
+                                              taskData, // Pass taskData (non-nullable)
+                                          taskId: taskId,
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                });
+                              },
+                            );
+                          } else {
+                            return ListTile(
+                              title: const Text('Titre non disponible'),
+                              subtitle: Text('Reçue le ${_formatDate(date)}'),
+                            );
+                          }
+                        },
+                      );
+                    },
+                  ),
+                ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Fermer"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Conversion des dates pour le tri et la validation
+  DateTime _convertToDateTime(dynamic date) {
+    if (date is Timestamp) {
+      return date.toDate();
+    } else if (date is String) {
+      return DateTime.parse(date);
+    } else {
+      throw Exception("Format de date invalide");
+    }
   }
 
   // Charger les tâches depuis Firestore
@@ -262,17 +420,6 @@ class _EtudPageState extends State<EtudPage> {
     }
   }
 
-  // Conversion des dates pour le tri et la validation
-  DateTime _convertToDateTime(dynamic date) {
-    if (date is Timestamp) {
-      return date.toDate();
-    } else if (date is String) {
-      return DateTime.parse(date);
-    } else {
-      throw Exception("Format de date invalide");
-    }
-  }
-
   // Formater une date en chaîne lisible
   String _formatDate(DateTime date) {
     return '${date.day}/${date.month}/${date.year}';
@@ -286,6 +433,54 @@ class _EtudPageState extends State<EtudPage> {
         backgroundColor: Colors.teal,
         centerTitle: true,
         actions: [
+          StreamBuilder<List<Map<String, dynamic>>>(
+            stream: getUnreadNotifications(widget.userId),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const SizedBox();
+              }
+              if (snapshot.hasError) {
+                print("Erreur dans le StreamBuilder : ${snapshot.error}");
+                return Center(
+                  child: Text(
+                    'Erreur : ${snapshot.error}',
+                    style: const TextStyle(fontSize: 16, color: Colors.red),
+                  ),
+                );
+              }
+              final unreadCount = snapshot.data?.length ?? 0;
+              return IconButton(
+                icon: Stack(
+                  children: [
+                    const Icon(Icons.notifications),
+                    if (unreadCount > 0)
+                      Positioned(
+                        right: 0,
+                        child: Container(
+                          padding: const EdgeInsets.all(2),
+                          decoration: const BoxDecoration(
+                            color: Colors.red,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Text(
+                            '$unreadCount',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+                onPressed: () {
+                  final notifications = snapshot.data ?? [];
+                  _showNotifications(context, notifications);
+                },
+              );
+            },
+          ),
           PopupMenuButton<String>(
             onSelected: (value) {
               if (value == 'tasks') {

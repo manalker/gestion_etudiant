@@ -34,7 +34,55 @@ class _ViewTasksPageState extends State<ViewTasksPage> {
       );
     }
   }
+  Future<bool> taskHasNotification(String taskId) async {
+    final querySnapshot = await _firestore
+        .collection('Notifs')
+        .where('id_tache', isEqualTo: taskId)
+        .get();
 
+    return querySnapshot.docs.isNotEmpty;
+  }
+  Future<void> addNotification({
+  required String idTache,
+  required String owner,
+  required DateTime dateNotif,
+  required bool is_read,
+}) async {
+  final notifsCollection = FirebaseFirestore.instance.collection('Notifs');
+  await notifsCollection.add({
+    'id_tache': idTache,
+    'owner': owner,
+    'date_notif': Timestamp.fromDate(dateNotif),
+    'is_read': is_read,
+  });
+}
+  // Sélecteurs pour la date et l'heure
+  DateTime selectedDate = DateTime.now();
+  TimeOfDay selectedTime = TimeOfDay.now();
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: selectedDate,
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2101),
+    );
+    if (pickedDate != null && pickedDate != selectedDate) {
+      setState(() {
+        selectedDate = pickedDate;
+      });
+    }
+  }
+  Future<void> _selectTime(BuildContext context) async {
+    final pickedTime = await showTimePicker(
+      context: context,
+      initialTime: selectedTime,
+    );
+    if (pickedTime != null) {
+      setState(() {
+        selectedTime = pickedTime;
+      });
+    }
+  }
   // Fonction pour obtenir la couleur en fonction de la priorité
   Color getPriorityColor(String priority) {
     switch (priority.toLowerCase()) {
@@ -116,7 +164,15 @@ class _ViewTasksPageState extends State<ViewTasksPage> {
             itemBuilder: (context, index) {
               final task = tasks[index];
               final taskData = task.data() as Map<String, dynamic>;
-
+return FutureBuilder<bool>(
+                future: taskHasNotification(task.id),
+                builder: (context, notificationSnapshot) {
+                  if (!notificationSnapshot.hasData) {
+                    return const Center(
+                      child: CircularProgressIndicator(),
+                    );
+                  }
+final hasNotification = notificationSnapshot.data!;
               // Obtenir l'icône de statut pour la tâche actuelle
               final Icon statusIcon =
                   getStatusIcon(taskData['statut'] ?? 'unknown');
@@ -148,6 +204,41 @@ class _ViewTasksPageState extends State<ViewTasksPage> {
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
+                       IconButton(
+                            icon: Icon(hasNotification
+                                  ? Icons.notifications_active
+                                  : Icons.notifications,
+                              color: hasNotification ? Colors.green : Colors.grey,
+                            ),
+                            onPressed: hasNotification
+                                ? null
+                                : () async {
+                                    await _selectDate(context);
+                                    await _selectTime(context);
+
+                                    final notificationDateTime = DateTime(
+                                      selectedDate.year,
+                                      selectedDate.month,
+                                      selectedDate.day,
+                                      selectedTime.hour,
+                                      selectedTime.minute,
+                                    );
+
+                                    await addNotification(
+                                      idTache: task.id,
+                                      owner: widget.userId,
+                                      dateNotif: notificationDateTime,
+                                      is_read: false,
+                                    );
+
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text('Notification ajoutée !'),
+                                      ),
+                                    );
+                                    setState(() {});
+                                  },
+                          ),
                       // Icone d'édition
                       IconButton(
                         icon: const Icon(Icons.edit, color: Colors.blue),
@@ -207,16 +298,18 @@ class _ViewTasksPageState extends State<ViewTasksPage> {
                           taskData: taskData,
                           taskId: task
                               .id, // Pass the Firestore document ID as taskId
+                         ),
                         ),
-                      ),
-                    );
-                  },
-                ),
-              );
-            },
-          );
-        },
-      ),
-    );
-  }
+                      );
+                    },
+                  ),
+                );
+              },
+            );
+          },
+        );
+      },
+    ),
+  );
+}
 }
