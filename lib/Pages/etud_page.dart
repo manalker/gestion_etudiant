@@ -22,7 +22,6 @@ class EtudPage extends StatefulWidget {
 class _EtudPageState extends State<EtudPage> {
   int _selectedIndex = 0; // Index de l'onglet sélectionné
 // Tâches par date
-  int _unreadCount = 0;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   @override
@@ -83,13 +82,14 @@ class _EtudPageState extends State<EtudPage> {
         .doc(taskId)
         .update({'is_read': true}).then((_) {
       setState(() {
-        _unreadCount--; // Decrease unread notification count
+// Decrease unread notification count
         // Manually update the notification list to remove the read notification
         notifications
             .removeWhere((notification) => notification['id_tache'] == taskId);
       });
     });
   }
+
   // Afficher les notifications dans une boîte de dialogue
   void _showNotifications(
       BuildContext context, List<Map<String, dynamic>> notifications) {

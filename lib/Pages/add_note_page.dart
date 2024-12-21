@@ -46,7 +46,7 @@ class _AddNotePageState extends State<AddNotePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Ajouter une tâche'),
+        title: const Text('Ajouter une note'),
         backgroundColor: Colors.teal,
         centerTitle: true,
       ),
@@ -59,7 +59,7 @@ class _AddNotePageState extends State<AddNotePage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  'Remplissez les informations de la tâche :',
+                  'Remplissez les informations de la note :',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 20),
